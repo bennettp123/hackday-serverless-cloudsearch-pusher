@@ -2,7 +2,7 @@ import json
 import logging
 import boto3
 
-cloudsearch_endpoint = 'https://doc-swm-content-search-dev-xnjr4k4s4lqv6dxyuss5boi34a.ap-southeast-2.cloudsearch.amazonaws.com'
+cloudsearch_endpoint = os.environ.get('DOCUMENT_ENDPOINT')
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)

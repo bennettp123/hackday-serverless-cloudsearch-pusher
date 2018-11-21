@@ -64,11 +64,12 @@ provider:
 functions:
   hello:
     handler: handler.hello
+    memorySize: 128
+    environment:
+      DOCUMENT_ENDPOINT: "https://doc-swm-content-search-dev-xnjr4k4s4lqv6dxyuss5boi34a.ap-southeast-2.cloudsearch.amazonaws.com"
     events:
       - sqs:
-          arn: arn:aws:sqs:ap-southeast-2:949304525094:bennetts-test-queue
-          batchSize: 10
-
+          arn: "arn:aws:sqs:ap-southeast-2:949304525094:bennetts-test-queue"
 
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
