@@ -2,34 +2,13 @@ import json
 import logging
 import boto3
 
+cloudsearch_endpoint = 'https://doc-swm-content-search-dev-xnjr4k4s4lqv6dxyuss5boi34a.ap-southeast-2.cloudsearch.amazonaws.com'
+
 logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 def hello(event, context):
-    #body = {
-    #    "message": "Go Serverless v1.0! Your function executed successfully!",
-    #    "input": event
-    #}
 
-    #response = {
-    #    "statusCode": 200,
-    #    "body": json.dumps(body)
-    #}
-
-    #return response
-
-    # Use this code if you don't use the http event with the LAMBDA-PROXY
-    # integration
-    #"""
-    #return {
-    #    "message": "Go Serverless v1.0! Your function executed successfully!",
-    #    "event": event
-    #}
-    #"""
-
-    #logger.info(json.dumps({"event": event, "context": context}))
-    logger.setLevel(logging.INFO)
-    logger.info(event)
-    
     docs = []
 
     for record in event['Records']:
@@ -41,8 +20,8 @@ def hello(event, context):
             ident = original_doc['message']['identifier']
             status = content['status']
             kind = content['kind']
-            #assets = content.get('assets', None)
-            topics = list(set(content['secondaryTopics'] + [content['primaryTopic']]))
+            topics = list(set(
+                content['secondaryTopics'] + [content['primaryTopic']]))
             product = content.get('product', None)
             source = content.get('source', None)
             items = content['items']
@@ -50,21 +29,21 @@ def hello(event, context):
             heading = [x for x in items if x['kind'] == 'heading']
             head_kicker = [x for x in items if x['kind'] == 'head-kicker']
             homepage_head = [x for x in items if x['kind'] == 'homepage-head']
-            homepage_teaser = [x for x in items if x['kind'] == 'homepage-teaser']
+            homepage_teaser = [
+                    x for x in items if x['kind'] == 'homepage-teaser']
             canonical_url = [x for x in items if x['kind'] == 'canonical-url']
-            canonical_title = [x for x in items if x['kind'] == 'canonical-title']
+            canonical_title = [
+                    x for x in items if x['kind'] == 'canonical-title']
             keywords = [x for x in items if x['kind'] == 'keywords']
             main_image = [x for x in items if x['kind'] == 'main-image']
             actual_content = [x for x in items if x['kind'] == 'content']
             
             if len(main_image) > 1:
-                logger.warning('More than one main_image found! Ignoring all but the first.')
+                logger.warning('More than one main_image found!')
 
             if len(canonical_url) > 1:
-                logger.warning('More than one canonical_url found! Ignoring all but the first.')
+                logger.warning('More than one canonical_url found!')
 
-            #import pdb; pdb.set_trace()
-            
             flatten = lambda l: [item for sublist in l for item in sublist]
             
             def first_or_none(l):
@@ -76,15 +55,25 @@ def hello(event, context):
                 "type": "add",
                 "id": ident,
                 "fields": {
-                    "heading": ' '.join(x['text'] for x in heading),
-                    "head_kicker": ' '.join(x['text'] for x in head_kicker),
-                    "homepage_head": ' '.join(x['text'] for x in homepage_head),
-                    "homepage_teaser": ' '.join(x['text'] for x in homepage_teaser),
-                    "canonical_url": first_or_none([x['canonicalUrl'] for x in canonical_url]),
-                    "canonical_title": ' '.join(x['text'] for x in canonical_title),
-                    "keywords": flatten([x['keywords'] for x in keywords]),
-                    "main_image": first_or_none([x['name'] for x in main_image]),
-                    "content": ' '.join([y.get('text', '') for y in flatten([x['blocks'] for x in actual_content])]),
+                    "heading": ' '.join(
+                        x['text'] for x in heading),
+                    "head_kicker": ' '.join(
+                        x['text'] for x in head_kicker),
+                    "homepage_head": ' '.join(
+                        x['text'] for x in homepage_head),
+                    "homepage_teaser": ' '.join(
+                        x['text'] for x in homepage_teaser),
+                    "canonical_url": first_or_none([
+                        x['canonicalUrl'] for x in canonical_url]),
+                    "canonical_title": ' '.join(
+                        x['text'] for x in canonical_title),
+                    "keywords": flatten([
+                        x['keywords'] for x in keywords]),
+                    "main_image": first_or_none([
+                        x['name'] for x in main_image]),
+                    "content": ' '.join([
+                        y.get('text', '') for y in flatten([
+                            x['blocks'] for x in actual_content])]),
                     "status": status,
                     "kind": kind,
                     "topics": topics,
@@ -93,10 +82,13 @@ def hello(event, context):
                 },
             }
 
+            # CloudSearch API doesn't permit null; you need to omit
+            # empty keys entirely. Delete empty keys from the document:
             for k,v in search_doc.items():
                 if v is None:
                     del search_doc[k]
 
+            # Same for the fields:
             for k,v in search_doc['fields'].items():
                 if v is None:
                     del search_doc['fields'][k]
@@ -108,12 +100,12 @@ def hello(event, context):
             logging.exception(e)
             logging.info(event)
 
-        logger.info('expected number of docs: {}'.format(len(event['Records'])))
-
         if docs:
             try:
-                client = boto3.client('cloudsearchdomain', endpoint_url='https://doc-swm-content-search-dev-xnjr4k4s4lqv6dxyuss5boi34a.ap-southeast-2.cloudsearch.amazonaws.com')
-                response = client.upload_documents(
+                cloudsearch = boto3.client('cloudsearchdomain',
+                        endpoint_url=cloudsearch_endpoint)
+
+                response = cloudsearch.upload_documents(
                         documents=json.dumps(docs),
                         contentType='application/json')
 
