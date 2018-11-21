@@ -28,7 +28,7 @@ def hello(event, context):
 
     #logger.info(json.dumps({"event": event, "context": context}))
     logger.setLevel(logging.INFO)
-    logger.debug(json.dumps({"event": event}))
+    logger.info(event)
     
     docs = []
 
@@ -41,10 +41,10 @@ def hello(event, context):
             ident = original_doc['message']['identifier']
             status = content['status']
             kind = content['kind']
-            assets = content['assets']
+            #assets = content.get('assets', None)
             topics = list(set(content['secondaryTopics'] + [content['primaryTopic']]))
-            product = content['product']
-            source = content['source']
+            product = content.get('product', None)
+            source = content.get('source', None)
             items = content['items']
             
             heading = [x for x in items if x['kind'] == 'heading']
@@ -93,6 +93,10 @@ def hello(event, context):
                 },
             }
 
+            for k,v in search_doc.items():
+                if v is None:
+                    del search_doc[k]
+
             for k,v in search_doc['fields'].items():
                 if v is None:
                     del search_doc['fields'][k]
@@ -103,6 +107,8 @@ def hello(event, context):
         except Exception as e:
             logging.exception(e)
             logging.info(event)
+
+        logger.info('expected number of docs: {}'.format(len(event['Records'])))
 
         if docs:
             try:
