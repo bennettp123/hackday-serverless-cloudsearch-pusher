@@ -5,8 +5,13 @@ import json
 
 #original_doc = json.load(sys.stdin)
 
-with open('an-actual-message.json', 'r') as f:
-    original_doc = json.load(f)
+#with open('an-actual-message.json', 'r') as f:
+#    original_doc = json.load(f)
+
+with open('event.json', 'r') as f:
+    event = json.load(f)
+
+import pdb; pdb.set_trace()
 
 content = original_doc['message']['content']
 ident = original_doc['message']['identifier']
@@ -37,13 +42,13 @@ search_doc = {
     "id": ident,
     "fields": {
         "heading": ' '.join(x['text'] for x in heading),
-        "head-kicker": ' '.join(x['text'] for x in head_kicker),
-        "homepage-head": ' '.join(x['text'] for x in homepage_head),
-        "homepage-teaser": ' '.join(x['text'] for x in homepage_teaser),
-        "canonical-url": [x['canonicalUrl'] for x in canonical_url],
-        "canonical-title": ' '.join(x['text'] for x in canonical_title),
+        "head_kicker": ' '.join(x['text'] for x in head_kicker),
+        "homepage_head": ' '.join(x['text'] for x in homepage_head),
+        "homepage_teaser": ' '.join(x['text'] for x in homepage_teaser),
+        "canonical_url": [x['canonicalUrl'] for x in canonical_url],
+        "canonical_title": ' '.join(x['text'] for x in canonical_title),
         "keywords": flatten([x['keywords'] for x in keywords]),
-        "main-image": [x['name'] for x in main_image],
+        "main_image": [x['name'] for x in main_image],
         "content": ' '.join([y['text'] for y in flatten([x['blocks'] for x in actual_content])]),
         "status": status,
         "kind": kind,
